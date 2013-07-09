@@ -1,0 +1,4 @@
+name = Score Locations
+description = Score location based on vocabulary score.
+package = Custom Modules
+core = 7.x
