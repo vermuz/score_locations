@@ -5,7 +5,7 @@
 
 function score_locations_node_view($node, $view_mode, $langcode)
 {
-	kpr($node);
+	//kpr($node);
 	//kpr($node->field_days_of_week);
 	//foreach($node->field_days_of_week as $tt)
 	//{
@@ -133,6 +133,7 @@ function score_locations_no_days_selected(&$node, $days_in_chosen_range)
 	
 	if(!isset($node->field_days_of_week['und'][0]))
 	{
+		//die(print_r($node, TRUE));
 		foreach($terms as $term_node)
 		{
 			foreach($days_in_chosen_range as $tod)
@@ -216,16 +217,18 @@ function set_days_selected_in_all_range(&$node, $days_in_chosen_range,$daysonfor
 // If days selected on form not within range , unset them
 function unset_days_not_in_range(&$node,$days_in_chosen_range)
 {
-	foreach ($node->field_days_of_week['und'] as $key=>$value)
-	{		
-		
-		//die(print_r($node->field_days_of_week['und'], TRUE));
-		if(!in_array($value, $days_in_chosen_range))
+	//Grab tids of the days chosen on the form
+	//die(print_r($days_in_chosen_range,TRUE));
+	foreach($node->field_days_of_week['und'] as $key => $day_chosen_on_form)
+	{
+		//die(print_r(taxonomy_term_load($day_chosen_on_form['tid'], TRUE)));
+		if(!in_array(taxonomy_term_load($day_chosen_on_form['tid'])->name, $days_in_chosen_range))
 		{
+			//die(print_r($node, TRUE));
 			unset($node->field_days_of_week['und'][$key]);
+			
 		}
 	}
-	
 }
 
 function get_days($start_date, $end_date)
