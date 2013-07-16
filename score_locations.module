@@ -15,30 +15,80 @@ function score_locations_form_library_hours_node_form_alter(&$form, &$form_state
 
 function score_locations_node_submit($node)
 {
-	// Get All Start Days
-	dpm(get_all_start_dates($node));
-	
-	// Get All End Days
-	dpm(get_all_end_dates($node));
+	// For all fieldsets
+	for($i = 0; $i <20; $i++){
+		if(isset($node->field_time_field_collection['und'][$i])){
+			// Load all fieldsets in an array so we can act on them piecewise
+			$fieldsets[] = $node->field_time_field_collection['und'][$i];
+		}
+	}
+	foreach($fieldsets as $fieldset)
+	{
+		// Get all days within chosen range in a fieldset
+		//get_all_days($fieldset);
+		//dpm(get_all_days($fieldset));
+		
+		$days_chosen_on_form = get_all_days($fieldset);
+		//dpm($days_chosen_on_form);
+		
+		// Get number of effected days on a fieldset
+		$days_effected_on_form = get_number_of_days_effected($fieldset, $days_chosen_on_form);
+		//dpm(get_number_of_days_effected($fieldset, $days_chosen_on_form));
 
-	// Get Days in Chosen Range
-	$days_in_chosen_range = get_days_chosen_range_in_each_fieldset();
-	//**********************************************************************************************
-	//die(kpr($node->field_time_field_collection['und']));
-	// Get all days of week from the taxonomy
-	//dpm(get_all_days_of_week());
-	//dpm($node->field_time_field_collection['und']['0']['field_start_date']['und']['0']['value']);
-	//dpm($node->field_time_field_collection['und']['0']['field_start_date']);
-	//dpm(get_all_start_dates());
+		// Score the fieldset
+		score_the_fieldset($node,$fieldset,$days_effected_on_form);
+	}
 	
-	//user entered Start and end date
-	// All Start Dates
+}
 
-	// All End Dates
-	//***********************************************************************************************
+// Get a score of the chosen values on the form
+function score_the_fieldset($node,$fieldset,$days_effected_on_form)
+{
 
 }
 
+// Get number of days effected
+function get_number_of_days_effected($fieldset, $days_chosen_on_form)
+{
+	$number_of_days = 0;
+	//dpm($fieldset);
+	// Get Start and End dates of the fieldset
+	$start_time_on_fieldset = $fieldset['field_start_date']['und']['0']['value'];
+	$end_time_on_fieldset   = $fieldset['field_end_date']['und']['0']['value'];
+	// Format dates
+	$formatted_start_date_on_fieldset = strtotime($start_time_on_fieldset);
+	$formatted_end_date_on_fieldset = strtotime($end_time_on_fieldset);
+
+	while(date('U', $formatted_start_date_on_fieldset) <= date('U',$formatted_end_date_on_fieldset))
+	{
+		// Extract days from chosen range
+		$day_of_week = date("l", $formatted_start_date_on_fieldset);
+		// If Chosen days in the taxonomy of days chosen on the form
+		if(in_array($day_of_week, $days_chosen_on_form))
+		{
+			$number_of_days++;
+		}
+		$formatted_start_date_on_fieldset = strtotime('+1 day', $formatted_start_date_on_fieldset);
+	}
+	return $number_of_days;
+}
+
+// Get all days within chosen range in a fieldset
+function get_all_days($fieldset)
+{
+	$fieldset_start = $fieldset['field_start_date']['und']['0']['value'];
+	$fieldset_end = $fieldset['field_end_date']['und']['0']['value'];
+	$formatted_start_date = strtotime($fieldset_start);
+	$formatted_end_date = strtotime($fieldset_end);
+	while(date('U',$formatted_start_date) <= date('U',$formatted_end_date)){
+		$days_of_week = date('l', $formatted_start_date);
+		$days[] = $days_of_week;
+		$formatted_start_date = strtotime('+1 day', $formatted_start_date);
+	}
+	return $days;
+}
+
+// Get all days of week from the days of week taxonomy
 function get_all_days_of_week()
 {
 	// Days of Week Taxonomy
@@ -53,7 +103,7 @@ function get_all_days_of_week()
 	return $days_of_week;
 }
 
-
+// Get all end dates
 function get_all_start_dates($node)
 {
 	
@@ -73,6 +123,7 @@ function get_all_start_dates($node)
 	return $start_dates;
 }
 
+// Get all start dates
 function get_all_end_dates($node)
 {
 	
@@ -91,19 +142,3 @@ function get_all_end_dates($node)
 	}
 	return $end_dates;
 }
-
-function get_days_chosen_range_in_each_fieldset()
-{
-	//Get range
-	for($i = 0; $i <20; $i++)
-	{
-		if(isset($node->field_time_field_collection['und'][$i]))
-		{
-			
-
-		}
-	}
-
-}
-
-
