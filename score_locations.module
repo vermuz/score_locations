@@ -15,6 +15,8 @@ function score_locations_form_library_hours_node_form_alter(&$form, &$form_state
 
 function score_locations_node_submit($node)
 {
+	//die(kpr($node));
+    $days_of_week_taxonomy = get_all_days_of_week();
 	// For all fieldsets
 	for($i = 0; $i <20; $i++){
 		if(isset($node->field_time_field_collection['und'][$i])){
@@ -27,24 +29,94 @@ function score_locations_node_submit($node)
 		// Get all days within chosen range in a fieldset
 		//get_all_days($fieldset);
 		//dpm(get_all_days($fieldset));
+		//dpm(get_all_days_of_week());
 		
 		$days_chosen_on_form = get_all_days($fieldset);
 		//dpm($days_chosen_on_form);
 		
+		//if selected days in a fieldset, not in range, unset them
+		unset_days_not_in_range_of_fieldset($fieldset, $days_chosen_on_form);
+
 		// Get number of effected days on a fieldset
 		$days_effected_on_form = get_number_of_days_effected($fieldset, $days_chosen_on_form);
 		//dpm(get_number_of_days_effected($fieldset, $days_chosen_on_form));
 
+		// If no days were selected by the user, check all days within range in that fieldset
+		check_all_days_if_no_day_selected($fieldset, $days_chosen_on_form, $days_of_week_taxonomy);
+
 		// Score the fieldset
-		score_the_fieldset($node,$fieldset,$days_effected_on_form);
+		score_the_fieldset($fieldset,$days_effected_on_form);
 	}
-	
+}
+
+// If no days are selected through checkboxes, check all day within range in that fieldset
+function check_all_days_if_no_day_selected($fieldset, $days_chosen_on_form, $days_of_week_taxonomy)
+{
+	//dpm($fieldset);
+	//dpm($days_chosen_on_form);
+	//dpm($fieldset['field_days_of_week']['und'][0]);
+	//dpm($days_of_week_taxonomy);
+	if(!isset($fieldset['field_days_of_week']['und'][0]['tid']))
+	{
+		//dpm("You haven`t made a selection have ya");
+		//foreach($days_of_week_taxonomy as $day_of_week)
+		//{
+			//foreach($days_chosen_on_form as $day_chosen_in_range_in_a_fieldset)
+			//{
+				//if($day_chosen_in_range_in_a_fieldset == $day_of_week)
+				//{
+					//$fieldset['field_days_of_week']
+				//}
+			//}
+		//}
+
+	}
+}
+
+// The days selected in the fieldset if not in range, unset them
+function unset_days_not_in_range_of_fieldset($fieldset, $days_chosen_on_form)
+{
+	//dpm($fieldset);
+
+	//dpm($days_chosen_on_form);
+	// Get days chosen on the form by the user using the checkboxes
+	//$days_chosen_by_checkbox = array();
+	//$days_selected = array();
+	//for($i=0; $i<sizeof($fieldset['field_days_of_week']['und']); $i++)
+	//{
+		//dpm($days_chosen_on_form);
+		//dpm(taxonomy_term_load($fieldset['field_days_of_week']['und'][$i]['tid'])->name);	
+		//dpm(taxonomy_term_load($fieldset['field_days_of_week']['und'][$i]['tid']['name']));
+
+		// Trying to get property of non-object in unset_days_not_in_range_of_fieldset() (line 70 of /vagrant/public/mani-drupal.vbox.local/www/sites/default/modules/custom/score_Locations/score_locations.module).
+		//if(in_array(taxonomy_term_load($fieldset['field_days_of_week']['und'][$i]['tid'])->name, $days_chosen_on_form))
+		//{
+			//dpm("Its all there");
+		//}
+		//else
+		//{
+			//dpm("nope");
+			// If days selected by checkbox are not in the range, unset them
+			//unset($fieldset['field_days_of_week']['und'][$i]);
+			//$fieldset['field_days_of_week']['und'][$i]['tid']->name = NULL;
+		//}
+	//}
 }
 
 // Get a score of the chosen values on the form
-function score_the_fieldset($node,$fieldset,$days_effected_on_form)
+function score_the_fieldset($fieldset,$days_effected_on_form)
 {
+	// Current Epoch
+	$time_now_epoch = time();
+	// Count checked field locations
+	$checked_field_locations = count($fieldset['field_locations']['und']);
 
+	// Scoring formula
+	$score_node = $checked_field_locations * $days_effected_on_form;
+	
+	// Populate Score field with calculated score
+	$fieldset['field_score']['und'][0]['value'] = $score_node;
+	$fieldset['entity']->field_score['und'][] = array('value' => $score_node);	
 }
 
 // Get number of days effected
