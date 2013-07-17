@@ -34,6 +34,9 @@ function score_locations_node_submit($node)
 		$days_chosen_on_form = get_all_days($fieldset);
 		//dpm($days_chosen_on_form);
 		
+		// Get Term ids of all days chosen in each fieldset of the form
+		//get_tids_of_days_chosen_on_form($fieldset);
+
 		//if selected days in a fieldset, not in range, unset them
 		unset_days_not_in_range_of_fieldset($fieldset, $days_chosen_on_form);
 
@@ -49,26 +52,28 @@ function score_locations_node_submit($node)
 	}
 }
 
+//function get_tids_of_days_chosen_on_form($fieldset)
+//{
+	//dpm($fieldset);
+//}
+
+
 // If no days are selected through checkboxes, check all day within range in that fieldset
 function check_all_days_if_no_day_selected($fieldset, $days_chosen_on_form, $days_of_week_taxonomy)
 {
 	//dpm($fieldset);
-	//dpm($days_chosen_on_form);
-	//dpm($fieldset['field_days_of_week']['und'][0]);
-	//dpm($days_of_week_taxonomy);
+	$days_chosen = array();
+	// Load tids of all chosen fieldsets
+	for($i=0; $i<sizeof($fieldset['field_days_of_week']['und']); $i++)
+	{
+		$days_chosen[]= taxonomy_term_load($fieldset['field_days_of_week']['und'][$i]['tid']);	
+	}
+
+	dpm($days_chosen);
+	
 	if(!isset($fieldset['field_days_of_week']['und'][0]['tid']))
 	{
-		//dpm("You haven`t made a selection have ya");
-		//foreach($days_of_week_taxonomy as $day_of_week)
-		//{
-			//foreach($days_chosen_on_form as $day_chosen_in_range_in_a_fieldset)
-			//{
-				//if($day_chosen_in_range_in_a_fieldset == $day_of_week)
-				//{
-					//$fieldset['field_days_of_week']
-				//}
-			//}
-		//}
+		
 
 	}
 }
