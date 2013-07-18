@@ -45,37 +45,51 @@ function score_locations_node_submit($node)
 		//dpm(get_number_of_days_effected($fieldset, $days_chosen_on_form));
 
 		// If no days were selected by the user, check all days within range in that fieldset
-		check_all_days_if_no_day_selected($fieldset, $days_chosen_on_form, $days_of_week_taxonomy);
+		check_all_days_if_no_day_selected($fieldset, $days_chosen_on_form);
 
 		// Score the fieldset
 		score_the_fieldset($fieldset,$days_effected_on_form);
 	}
 }
 
-//function get_tids_of_days_chosen_on_form($fieldset)
-//{
-	//dpm($fieldset);
-//}
-
-
 // If no days are selected through checkboxes, check all day within range in that fieldset
-function check_all_days_if_no_day_selected($fieldset, $days_chosen_on_form, $days_of_week_taxonomy)
+function check_all_days_if_no_day_selected($fieldset, $days_chosen_on_form)
 {
+	// Show the fieldset
 	//dpm($fieldset);
-	$days_chosen = array();
-	// Load tids of all chosen fieldsets
-	for($i=0; $i<sizeof($fieldset['field_days_of_week']['und']); $i++)
-	{
-		$days_chosen[]= taxonomy_term_load($fieldset['field_days_of_week']['und'][$i]['tid']);	
-	}
 
-	dpm($days_chosen);
-	
+	// If the user has not set any days by checking a checkbox in the fieldset
 	if(!isset($fieldset['field_days_of_week']['und'][0]['tid']))
 	{
-		
-
+		//dpm("You have made no selections mate");	
+		$days_chosen_tids = array();
+		// Find out all the days chosen by the user on the form in each fieldset
+		foreach($days_chosen_on_form as $days_chosen)
+		{
+			// Get tids for all the terms in the taxonomy
+			$days_chosen_tids[] = _get_term_from_name($days_chosen, 'days_of_week');
+		}
+		// For all chosen tids, set the days on the fieldset
+		foreach($days_chosen_tids as $cho_tid)
+		{
+			//dpm($cho_tid);
+			$fieldset['field_days_of_week']['und'][]['tid'] = $cho_tid;
+			$fieldset['entity']->field_days_of_week['und'][] =array('tid' => $cho_tid);
+		}
 	}
+}
+
+// Helper function that takes a term as an input and return the term id
+function _get_term_from_name($term_name, $vocabulary_name) {
+  if ($vocabulary = taxonomy_vocabulary_machine_name_load($vocabulary_name)) {
+    $tree = taxonomy_get_tree($vocabulary->vid);
+    foreach ($tree as $term) {
+      if ($term->name == $term_name) {
+        return $term->tid;
+      }
+    }
+  }
+  return FALSE;
 }
 
 // The days selected in the fieldset if not in range, unset them
