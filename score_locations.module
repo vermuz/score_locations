@@ -99,31 +99,31 @@ function _get_term_from_name($term_name, $vocabulary_name) {
 // The days selected in the fieldset if not in range, unset them
 function unset_days_not_in_range_of_fieldset($fieldset, $days_chosen_on_form)
 {
-	//dpm($fieldset);
-
-	//dpm($days_chosen_on_form);
-	// Get days chosen on the form by the user using the checkboxes
-	//$days_chosen_by_checkbox = array();
-	//$days_selected = array();
-	//for($i=0; $i<sizeof($fieldset['field_days_of_week']['und']); $i++)
-	//{
-		//dpm($days_chosen_on_form);
-		//dpm(taxonomy_term_load($fieldset['field_days_of_week']['und'][$i]['tid'])->name);	
-		//dpm(taxonomy_term_load($fieldset['field_days_of_week']['und'][$i]['tid']['name']));
-
-		// Trying to get property of non-object in unset_days_not_in_range_of_fieldset() (line 70 of /vagrant/public/mani-drupal.vbox.local/www/sites/default/modules/custom/score_Locations/score_locations.module).
-		//if(in_array(taxonomy_term_load($fieldset['field_days_of_week']['und'][$i]['tid'])->name, $days_chosen_on_form))
-		//{
-			//dpm("Its all there");
-		//}
-		//else
-		//{
-			//dpm("nope");
-			// If days selected by checkbox are not in the range, unset them
-			//unset($fieldset['field_days_of_week']['und'][$i]);
-			//$fieldset['field_days_of_week']['und'][$i]['tid']->name = NULL;
-		//}
-	//}
+	if(isset($fieldset['field_days_of_week']['und'][0]['tid']))
+	{
+		// See the days selected on the fieldset.
+		$days_chosen_tids = array();
+		// Find out all the days chosen by the user on the form in each fieldset
+		foreach($days_chosen_on_form as $days_chosen)
+		{
+			// Get tids for all the terms in the taxonomy
+			$days_chosen_tids[] = _get_term_from_name($days_chosen, 'days_of_week');
+		}
+		
+		// Days in the range chosen by the user through the date range
+		for($j=0; $j<sizeof($fieldset['field_days_of_week']['und']); $j++)
+		{
+			// If User selected days are not in the range chosen by the range
+			if(!in_array($fieldset['field_days_of_week']['und'][$j]['tid'], $days_chosen_tids))
+			{
+				//dpm("Hey you checked a day which is not in range");
+				//Unset the days
+				unset($fieldset['field_days_of_week']['und'][$j]);
+				unset($fieldset['entity']->field_days_of_week['und'][$j]);
+			}
+		}
+	}
+	
 }
 
 // Get a score of the chosen values on the form
