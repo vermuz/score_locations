@@ -69,8 +69,12 @@ function check_all_days_if_no_day_selected($fieldset, $days_chosen_on_form)
 			// Get tids for all the terms in the taxonomy
 			$days_chosen_tids[] = _get_term_from_name($days_chosen, 'days_of_week');
 		}
+		// Find unique entries in the result
+		$unique_days_chosen = array_unique($days_chosen_tids);
+		
 		// For all chosen tids, set the days on the fieldset
-		foreach($days_chosen_tids as $cho_tid)
+		//foreach($days_chosen_tids as $cho_tid)
+		foreach($unique_days_chosen as $cho_tid)
 		{
 			//dpm($cho_tid);
 			$fieldset['field_days_of_week']['und'][]['tid'] = $cho_tid;
