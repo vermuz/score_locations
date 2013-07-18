@@ -1,21 +1,25 @@
 <?php
 
 // This module scores the library hours node as it is entered.
-function score_locations_node_view($node, $view_mode, $langcode)
-{
+function score_locations_node_view($node, $view_mode, $langcode){
 	//kpr($node);
 }
-
-function score_locations_form_library_hours_node_form_alter(&$form, &$form_state, $form_id)
-{
-	//Disable Access to Score field for everyone except the Admin
-
-	// Change Text of Add another item
+// Alter Form State
+function score_locations_form_alter(&$form, &$form_state, $form_id){
+	// For All fieldsets
+	for($i = 0; $i <20; $i++){
+		// If the fieldset is set
+		if(isset($form['field_time_field_collection']['und'][$i])){
+			// If the user is not a Admin, don`t show him the score.
+			if(!user_access("administer content")){
+				$form['field_time_field_collection']['und'][$i]['field_score']['#access'] = FALSE;
+				$form['field_time_field_collection']['und'][$i]['#entity']->field_score['#access'] = FALSE;
+			}
+		}
+	}	
 }
-
-function score_locations_node_submit($node)
-{
-	//die(kpr($node));
+// Perform operations on Submission
+function score_locations_node_submit($node){
     $days_of_week_taxonomy = get_all_days_of_week();
 	// For all fieldsets
 	for($i = 0; $i <20; $i++){
@@ -24,65 +28,39 @@ function score_locations_node_submit($node)
 			$fieldsets[] = $node->field_time_field_collection['und'][$i];
 		}
 	}
-	foreach($fieldsets as $fieldset)
-	{
-		// Get all days within chosen range in a fieldset
-		//get_all_days($fieldset);
-		//dpm(get_all_days($fieldset));
-		//dpm(get_all_days_of_week());
-		
+	//Perform operations on fieldsets
+	foreach($fieldsets as $fieldset){
 		$days_chosen_on_form = get_all_days($fieldset);
-		//dpm($days_chosen_on_form);
-		
-		// Get Term ids of all days chosen in each fieldset of the form
-		//get_tids_of_days_chosen_on_form($fieldset);
-
 		//if selected days in a fieldset, not in range, unset them
 		unset_days_not_in_range_of_fieldset($fieldset, $days_chosen_on_form);
-
 		// Get number of effected days on a fieldset
 		$days_effected_on_form = get_number_of_days_effected($fieldset, $days_chosen_on_form);
-		//dpm(get_number_of_days_effected($fieldset, $days_chosen_on_form));
-
 		// If no days were selected by the user, check all days within range in that fieldset
 		check_all_days_if_no_day_selected($fieldset, $days_chosen_on_form);
-
 		// Score the fieldset
 		score_the_fieldset($fieldset,$days_effected_on_form);
 	}
 }
-
 // If no days are selected through checkboxes, check all day within range in that fieldset
-function check_all_days_if_no_day_selected($fieldset, $days_chosen_on_form)
-{
-	// Show the fieldset
-	//dpm($fieldset);
-
+function check_all_days_if_no_day_selected($fieldset, $days_chosen_on_form){
 	// If the user has not set any days by checking a checkbox in the fieldset
-	if(!isset($fieldset['field_days_of_week']['und'][0]['tid']))
-	{
+	if(!isset($fieldset['field_days_of_week']['und'][0]['tid'])){
 		//dpm("You have made no selections mate");	
 		$days_chosen_tids = array();
 		// Find out all the days chosen by the user on the form in each fieldset
-		foreach($days_chosen_on_form as $days_chosen)
-		{
+		foreach($days_chosen_on_form as $days_chosen){
 			// Get tids for all the terms in the taxonomy
 			$days_chosen_tids[] = _get_term_from_name($days_chosen, 'days_of_week');
 		}
 		// Find unique entries in the result
 		$unique_days_chosen = array_unique($days_chosen_tids);
-		
 		// For all chosen tids, set the days on the fieldset
-		//foreach($days_chosen_tids as $cho_tid)
-		foreach($unique_days_chosen as $cho_tid)
-		{
-			//dpm($cho_tid);
+		foreach($unique_days_chosen as $cho_tid){
 			$fieldset['field_days_of_week']['und'][]['tid'] = $cho_tid;
 			$fieldset['entity']->field_days_of_week['und'][] =array('tid' => $cho_tid);
 		}
 	}
 }
-
 // Helper function that takes a term as an input and return the term id
 function _get_term_from_name($term_name, $vocabulary_name) {
   if ($vocabulary = taxonomy_vocabulary_machine_name_load($vocabulary_name)) {
@@ -95,82 +73,62 @@ function _get_term_from_name($term_name, $vocabulary_name) {
   }
   return FALSE;
 }
-
 // The days selected in the fieldset if not in range, unset them
-function unset_days_not_in_range_of_fieldset($fieldset, $days_chosen_on_form)
-{
-	if(isset($fieldset['field_days_of_week']['und'][0]['tid']))
-	{
+function unset_days_not_in_range_of_fieldset($fieldset, $days_chosen_on_form){
+	if(isset($fieldset['field_days_of_week']['und'][0]['tid'])){
 		// See the days selected on the fieldset.
 		$days_chosen_tids = array();
 		// Find out all the days chosen by the user on the form in each fieldset
-		foreach($days_chosen_on_form as $days_chosen)
-		{
+		foreach($days_chosen_on_form as $days_chosen){
 			// Get tids for all the terms in the taxonomy
 			$days_chosen_tids[] = _get_term_from_name($days_chosen, 'days_of_week');
 		}
-		
 		// Days in the range chosen by the user through the date range
-		for($j=0; $j<sizeof($fieldset['field_days_of_week']['und']); $j++)
-		{
+		for($j=0; $j<sizeof($fieldset['field_days_of_week']['und']); $j++){
 			// If User selected days are not in the range chosen by the range
-			if(!in_array($fieldset['field_days_of_week']['und'][$j]['tid'], $days_chosen_tids))
-			{
-				//dpm("Hey you checked a day which is not in range");
+			if(!in_array($fieldset['field_days_of_week']['und'][$j]['tid'], $days_chosen_tids)){
+				//You checked a day which is not in range
 				//Unset the days
 				unset($fieldset['field_days_of_week']['und'][$j]);
 				unset($fieldset['entity']->field_days_of_week['und'][$j]);
 			}
 		}
 	}
-	
 }
-
 // Get a score of the chosen values on the form
-function score_the_fieldset($fieldset,$days_effected_on_form)
-{
+function score_the_fieldset($fieldset,$days_effected_on_form){
 	// Current Epoch
 	$time_now_epoch = time();
 	// Count checked field locations
 	$checked_field_locations = count($fieldset['field_locations']['und']);
-
 	// Scoring formula
 	$score_node = $checked_field_locations * $days_effected_on_form;
-	
 	// Populate Score field with calculated score
 	$fieldset['field_score']['und'][0]['value'] = $score_node;
 	$fieldset['entity']->field_score['und'][] = array('value' => $score_node);	
 }
-
 // Get number of days effected
-function get_number_of_days_effected($fieldset, $days_chosen_on_form)
-{
+function get_number_of_days_effected($fieldset, $days_chosen_on_form){
 	$number_of_days = 0;
-	//dpm($fieldset);
 	// Get Start and End dates of the fieldset
 	$start_time_on_fieldset = $fieldset['field_start_date']['und']['0']['value'];
 	$end_time_on_fieldset   = $fieldset['field_end_date']['und']['0']['value'];
 	// Format dates
 	$formatted_start_date_on_fieldset = strtotime($start_time_on_fieldset);
 	$formatted_end_date_on_fieldset = strtotime($end_time_on_fieldset);
-
-	while(date('U', $formatted_start_date_on_fieldset) <= date('U',$formatted_end_date_on_fieldset))
-	{
+	while(date('U', $formatted_start_date_on_fieldset) <= date('U',$formatted_end_date_on_fieldset)){
 		// Extract days from chosen range
 		$day_of_week = date("l", $formatted_start_date_on_fieldset);
 		// If Chosen days in the taxonomy of days chosen on the form
-		if(in_array($day_of_week, $days_chosen_on_form))
-		{
+		if(in_array($day_of_week, $days_chosen_on_form)){
 			$number_of_days++;
 		}
 		$formatted_start_date_on_fieldset = strtotime('+1 day', $formatted_start_date_on_fieldset);
 	}
 	return $number_of_days;
 }
-
 // Get all days within chosen range in a fieldset
-function get_all_days($fieldset)
-{
+function get_all_days($fieldset){
 	$fieldset_start = $fieldset['field_start_date']['und']['0']['value'];
 	$fieldset_end = $fieldset['field_end_date']['und']['0']['value'];
 	$formatted_start_date = strtotime($fieldset_start);
@@ -182,55 +140,38 @@ function get_all_days($fieldset)
 	}
 	return $days;
 }
-
 // Get all days of week from the days of week taxonomy
-function get_all_days_of_week()
-{
+function get_all_days_of_week(){
 	// Days of Week Taxonomy
 	$days_of_week = array();
 	// Load Days of week taxonomy
 	$days_of_week_taxonomy = taxonomy_term_load_multiple(array(),array('vid' => 4));
-	foreach($days_of_week_taxonomy as $day)
-	{
+	foreach($days_of_week_taxonomy as $day){
 		// Load days of week from the taxonomy into the array of days
 		$days_of_week[] = $day->name;
 	}
 	return $days_of_week;
 }
-
 // Get all end dates
-function get_all_start_dates($node)
-{
-	
+function get_all_start_dates($node){
 	$start_dates = array();
-	
 	// For all Fieldsets
-	for($i = 0; $i <20; $i++)
-	{
-		if(isset($node->field_time_field_collection['und'][$i]))
-		{
-			for($j=0; $j<sizeof($node->field_time_field_collection['und'][$i]['field_start_date']['und']); $j++)
-			{
+	for($i = 0; $i <20; $i++){
+		if(isset($node->field_time_field_collection['und'][$i])){
+			for($j=0; $j<sizeof($node->field_time_field_collection['und'][$i]['field_start_date']['und']); $j++){
 				$start_dates[] = $node->field_time_field_collection['und'][$i]['field_start_date']['und'][$j]['value'];
 			}
 		}
 	}
 	return $start_dates;
 }
-
 // Get all start dates
-function get_all_end_dates($node)
-{
-	
+function get_all_end_dates($node){
 	$end_dates = array();
-	
 	// For all Fieldsets
-	for($i = 0; $i <20; $i++)
-	{
-		if(isset($node->field_time_field_collection['und'][$i]))
-		{
-			for($j=0; $j<sizeof($node->field_time_field_collection['und'][$i]['field_end_date']['und']); $j++)
-			{
+	for($i = 0; $i <20; $i++){
+		if(isset($node->field_time_field_collection['und'][$i])){
+			for($j=0; $j<sizeof($node->field_time_field_collection['und'][$i]['field_end_date']['und']); $j++){
 				$end_dates[] = $node->field_time_field_collection['und'][$i]['field_end_date']['und'][$j]['value'];
 			}
 		}
