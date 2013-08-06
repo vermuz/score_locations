@@ -6,6 +6,8 @@ function score_locations_node_view($node, $view_mode, $langcode){
 }
 // Alter Form State
 function score_locations_form_alter(&$form, &$form_state, $form_id){
+		
+	//kpr($form);	
 	// For All fieldsets
 	for($i = 0; $i <20; $i++){
 		// If the fieldset is set
@@ -16,8 +18,81 @@ function score_locations_form_alter(&$form, &$form_state, $form_id){
 				$form['field_time_field_collection']['und'][$i]['#entity']->field_score['#access'] = FALSE;
 			}
 		}
+	}
+	// Change the text of the button Add Another Item to Add Another Time Range
+	if($form_id == 'library_hours_node_form'){
+		//The Add another item button is named Add Another Time Range
+		$form['field_time_field_collection']['und']['add_more']['#value'] = t('Add Another time Range');
+		//On clicking add another item, preload values from the previous 
+		// Add JS containing functionality.
+		//drupal_add_js(drupal_get_path('module','score_Locations').'/score_locations.js');
+		
+		// Form After build
+		// $form['AFTER_BUILD']
+		// Call the after build function
+		//for($i = 0; $i <20; $i++){
+		//$form['#after_build'][] = 'score_locations_after_build';
+		//for($i = 0; $i <20; $i++){
+		//if(isset($form['field_time_field_collection']['und'][$i])){
+				//dpm($form['field_time_field_collection']['und'][$i]);
+		//ajax_command_data(); 			
+		//$form['#after_build'][] = 'score_locations_after_build';
+			//}		
+		//}
+		drupal_add_js(drupal_get_path('module','score_Locations').'/score_locations.js');
+		//dpm($time_entered);
 	}	
 }
+
+// Get our own Jquery 
+function score_Locations_js_alter(&$js)
+{
+	$path = drupal_get_path('module','score_Locations').'/jquery1.7.js';
+	// Copy the current jQuery file settings and change
+ 	$js[$path] = $js['misc/jquery.js'];
+	// Update necessary settings
+  	$js[$path]['version'] = 1.7;
+  	$js[$path]['data'] = $path;
+	// Finally remove the original jQuery
+  	unset($js['misc/jquery.js']);
+	
+}
+
+function score_locations_after_build($form, &$form_state)
+{
+	// This will work after rebuilding the form, we need something to work on ajax creation of a new field collection
+	
+	// USE Jquery to grab first element value
+	//drupal_add_js(drupal_get_path('module','score_Locations').'/score_locations.js');
+		
+		
+	//dpm($form_state);	
+	//$form['title']['#default_value'] = t('ouch');
+	//$form['#node']->title = t('ouch');
+	//dpm($form_state);
+	//$first_fieldset_field_start_date = $form['field_time_field_collection']['und']['0']['#entity']->field_start_date['und']['0']['value'];
+	//dpm($first_fieldset_field_start_date);
+	//drupal_set_message('ouch');
+	//for($i = 0; $i <20; $i++){
+		//if(isset($form['field_time_field_collection']['und'][$i])){
+			//dpm($form['field_time_field_collection']['und'][$i]['field_start_date']['und']['0']['#default_value']['value']);
+			
+		//	$form['field_time_field_collection']['und'][$i]['#entity']->field_start_date['und']['0']['value'] = $first_fieldset_field_start_date;
+		//	$form['field_time_field_collection']['und'][$i]['field_start_date']['und']['0']['#default_value']['value']= $first_fieldset_field_start_date;
+		//}
+	//}
+	//for($i = 0; $i <20; $i++){
+		//if(isset($form['field_time_field_collection']['und'][$i])){
+			//$form['field_time_field_collection']['und'][$i]['#entity']->field_start_date['und']['0']['value'] = $first_fieldset_field_start_date;
+			//$form['field_time_field_collection']['und'][$i]['field_start_date']['und']['0']['#default_value']['value']= $first_fieldset_field_start_date;
+		//}
+	//}
+	//$form['field_time_field_collection']['und'][]['field_start_date']['und']['0']['#default_value'] = array('value'=> $first_fieldset_field_start_date);
+	//drupal_add_js(drupal_get_path('module','score_Locations').'/score_locations.js');
+	//return $form;
+}
+
+
 // Perform operations on Submission
 function score_locations_node_submit($node){
     $days_of_week_taxonomy = get_all_days_of_week();
